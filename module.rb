@@ -1,4 +1,12 @@
 # rubocop:disable all
+
+# This demonstrates a trick to adding new behavior on top of existing
+# methods in Ruby, which is used repeatedly in Rails' source
+
+# I have a Thing class that `include`-s module A,B,
+# both of which override #print method and still calls
+# super to retain the ancestors behavior
+
 module A
   def print
     puts 'A'
@@ -8,52 +16,26 @@ end
 
 module B
   def print
-    puts 'B'
     super
+    puts 'B'
   end
 end
 
-class Metal
+class Parent
   def print
-    puts "Thing"
+    puts 'Thing'
   end
 end
 
-class Thing < Metal
+class Thing < Parent
   include A, B
 end
 
-# Thing.new.print # => nil
-# Thing.ancestors # => [Thing, A, B, Metal, Object, PP::ObjectMixin, Kernel, BasicObject]
+Thing.new.print
 
-module Filtering
-  def process
-    puts 'do before_filter'
-    super # does AC::Base.process
-    puts 'do after_filter'
-  end
-end
+Thing.ancestors # => [Thing, A, B, Parent, Object, PP::ObjectMixin, Kernel, BasicObject]
 
-module AC; end
+# >> A
+# >> Thing
+# >> B
 
-class AC::Metal
-  def process
-    puts 'AC::Base.process'
-  end
-end
-
-#   class HelloController < ActionController::Metal
-#     def index
-#       self.response_body = "Hello World!"
-#     end
-#   end
-
-class AC::Base < AC::Metal
-  include Filtering
-end
-
-AC::Base.new.process # => nil
-
-# >> do before_filter
-# >> AC::Base.process
-# >> do after_filter
